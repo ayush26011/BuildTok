@@ -1,9 +1,10 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { CheckCircle, ChevronUp, ChevronDown, Play, Pause, Volume2, VolumeX } from 'lucide-react';
+import { CheckCircle, Play } from 'lucide-react';
 import ReelActions from './ReelActions';
 import Avatar from '../ui/Avatar';
+import ProBadge from '../ui/ProBadge';
 
 function CommentPanel({ project, onClose }) {
   const [text, setText] = useState('');
@@ -174,6 +175,7 @@ export default function ReelCard({ project, isActive }) {
             <div className="flex items-center gap-1.5">
               <span className="font-bold text-white text-sm group-hover:underline">{project.creator.name}</span>
               {project.creator.verified && <CheckCircle size={12} className="text-white/80" fill="rgba(255,255,255,0.2)" />}
+              {project.creator.isPro && <ProBadge size="xs" />}
             </div>
             <span className="text-white/60 text-xs">{project.creator.username}</span>
           </div>

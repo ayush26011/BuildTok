@@ -6,6 +6,7 @@ import { mockProjects, mockUsers, TRENDING_CATEGORIES } from '../data/mockData';
 import Sidebar from '../components/layout/Sidebar';
 import BottomNav from '../components/layout/BottomNav';
 import Avatar from '../components/ui/Avatar';
+import ProBadge from '../components/ui/ProBadge';
 import { pageVariants, fadeUpVariants, staggerContainerVariants, scaleInVariants } from '../utils/animations';
 
 function ProjectGrid({ projects }) {
@@ -79,6 +80,7 @@ function CreatorRow({ user }) {
         <div className="flex items-center gap-1">
           <span className="font-bold text-sm text-[#561C24] dark:text-cream truncate">{user.name}</span>
           {user.verified && <CheckCircle size={12} className="text-[#561C24] shrink-0" />}
+          {user.isPro && <ProBadge size="xs" />}
         </div>
         <span className="text-xs text-[#561C24]/60 dark:text-beige-warm/60">{user.username}</span>
       </div>

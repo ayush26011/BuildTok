@@ -10,7 +10,7 @@ import Badge from '../ui/Badge';
 import { useState } from 'react';
 
 const NAV_ITEMS = [
-  { icon: Home, label: 'Home', to: '/feed', id: 'nav-home' },
+  { icon: Home, label: 'Home', to: '/', id: 'nav-home' },
   { icon: Compass, label: 'Explore', to: '/explore', id: 'nav-explore' },
   { icon: Upload, label: 'Upload', to: '/upload', id: 'nav-upload' },
   { icon: Bookmark, label: 'Saved', to: '/saved', id: 'nav-saved' },
@@ -60,7 +60,7 @@ export default function Sidebar() {
       {/* Navigation */}
       <nav className="flex-1 space-y-1">
         {NAV_ITEMS.map(({ icon: Icon, label, to, id }) => {
-          const active = location.pathname === to;
+          const active = location.pathname === to || (to === '/' && location.pathname === '/feed');
           return (
             <Link key={to} to={to} id={id}>
               <motion.div
@@ -100,11 +100,13 @@ export default function Sidebar() {
         ))}
         {!collapsed && (
           <div className="px-3 pt-3">
-            <div className="glass-maroon rounded-2xl p-3 text-center">
-              <Zap size={16} className="text-[#561C24] mx-auto mb-1" />
-              <p className="text-[10px] font-bold text-[#561C24] dark:text-beige-warm">BuildTok Pro</p>
-              <p className="text-[9px] text-[#561C24]/60 dark:text-beige-warm/60 mt-0.5">Analytics & more</p>
-            </div>
+            <Link to="/settings">
+              <div className="glass-maroon rounded-2xl p-3 text-center hover:bg-[#561C24]/10 transition-colors cursor-pointer">
+                <Zap size={16} className="text-[#561C24] mx-auto mb-1" />
+                <p className="text-[10px] font-bold text-[#561C24] dark:text-beige-warm">BuildTok Pro</p>
+                <p className="text-[9px] text-[#561C24]/60 dark:text-beige-warm/60 mt-0.5">Analytics & more</p>
+              </div>
+            </Link>
           </div>
         )}
       </div>

@@ -1,13 +1,13 @@
 import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Home, Compass, Upload, User, TrendingUp } from 'lucide-react';
+import { Home, Compass, Upload, User, Settings } from 'lucide-react';
 
 const NAV = [
-  { icon: Home, label: 'Feed', to: '/feed', id: 'bottom-nav-feed' },
+  { icon: Home, label: 'Feed', to: '/', id: 'bottom-nav-feed' },
   { icon: Compass, label: 'Explore', to: '/explore', id: 'bottom-nav-explore' },
   { icon: Upload, label: 'Upload', to: '/upload', id: 'bottom-nav-upload', special: true },
-  { icon: TrendingUp, label: 'Trending', to: '/trending', id: 'bottom-nav-trending' },
   { icon: User, label: 'Profile', to: '/profile', id: 'bottom-nav-profile' },
+  { icon: Settings, label: 'Settings', to: '/settings', id: 'bottom-nav-settings' },
 ];
 
 export default function BottomNav() {
@@ -17,7 +17,7 @@ export default function BottomNav() {
     <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50 glass border-t border-white/10 pb-safe">
       <div className="flex items-center justify-around h-16 px-2">
         {NAV.map(({ icon: Icon, label, to, id, special }) => {
-          const active = location.pathname === to;
+          const active = location.pathname === to || (to === '/' && location.pathname === '/feed');
           return (
             <Link key={to} to={to} id={id} className="flex-1">
               <motion.div

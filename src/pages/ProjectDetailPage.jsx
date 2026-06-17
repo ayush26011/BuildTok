@@ -5,6 +5,7 @@ import { ArrowLeft, Heart, MessageCircle, Bookmark, Share2, GitBranch, ExternalL
 import { mockProjects, mockComments } from '../data/mockData';
 import { pageVariants } from '../utils/animations';
 import Avatar from '../components/ui/Avatar';
+import ProBadge from '../components/ui/ProBadge';
 import Sidebar from '../components/layout/Sidebar';
 import BottomNav from '../components/layout/BottomNav';
 
@@ -224,6 +225,7 @@ export default function ProjectDetailPage() {
                     <div className="flex items-center gap-1.5">
                       <span className="font-bold text-[#561C24] dark:text-cream">{project.creator.name}</span>
                       {project.creator.verified && <CheckCircle size={14} className="text-[#561C24]" />}
+                      {project.creator.isPro && <ProBadge size="sm" />}
                     </div>
                     <span className="text-xs text-[#561C24]/60 dark:text-beige-warm/60">{project.creator.username}</span>
                   </div>

@@ -8,6 +8,7 @@ import Sidebar from '../components/layout/Sidebar';
 import BottomNav from '../components/layout/BottomNav';
 import Avatar from '../components/ui/Avatar';
 import Badge from '../components/ui/Badge';
+import ProBadge from '../components/ui/ProBadge';
 import { pageVariants, fadeUpVariants, staggerContainerVariants, scaleInVariants } from '../utils/animations';
 import { use3DTilt } from '../hooks/use3DTilt';
 
@@ -154,6 +155,7 @@ export default function ProfilePage() {
                 <div className="flex items-center gap-2 flex-wrap">
                   <h1 className="font-display font-extrabold text-2xl text-[#561C24] dark:text-cream">{user.name}</h1>
                   {user.verified && <CheckCircle size={18} className="text-[#561C24]" fill="rgba(86,28,36,0.15)" />}
+                  {user.isPro && <ProBadge size="md" />}
                   <Badge label={user.badge} variant="achievement" />
                 </div>
                 <p className="text-[#561C24]/65 dark:text-beige-warm/65 text-sm">{user.username}</p>

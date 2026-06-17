@@ -14,53 +14,53 @@ import ExplorePage from './pages/ExplorePage';
 import UploadPage from './pages/UploadPage';
 import ProfilePage from './pages/ProfilePage';
 import ProjectDetailPage from './pages/ProjectDetailPage';
+import SettingsPage from './pages/SettingsPage';
 
-function ProtectedRoute({ children }) {
-  const { isAuthenticated, loading } = useAuth();
-  if (loading) return (
-    <div className="min-h-screen flex items-center justify-center bg-ambient">
-      <div className="flex flex-col items-center gap-3">
-        <div className="w-12 h-12 rounded-2xl bg-maroon-gradient flex items-center justify-center animate-pulse-glow">
-          <span className="text-cream-light text-xl font-bold">B</span>
-        </div>
-        <div className="flex gap-1">
-          {[0,1,2].map(i => (
-            <div key={i} className="w-2 h-2 rounded-full bg-[#561C24]/40 animate-bounce" style={{ animationDelay: `${i*0.15}s` }} />
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-  return isAuthenticated ? children : <Navigate to="/login" replace />;
-}
+// Navbar only on pages that need it (landing page kept at /landing)
+const NO_NAV_ROUTES = ['/login', '/register', '/feed', '/'];
 
 function AppRoutes() {
   const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
-  const isAuth = ['/login', '/register'].includes(location.pathname);
-  const isFeed = location.pathname === '/feed';
+
+  const isAuthPage = ['/login', '/register'].includes(location.pathname);
+  const isFeedPage = location.pathname === '/' || location.pathname === '/feed';
+  const showNav = !isAuthPage && !isFeedPage;
+  const showScrollProgress = showNav;
 
   return (
     <>
       <CursorGlow />
-      {!isAuth && !isFeed && <ScrollProgress />}
-      {!isAuth && !isFeed && (
+      {showScrollProgress && <ScrollProgress />}
+      {showNav && (
         <Navbar onMenuToggle={() => setMenuOpen(o => !o)} menuOpen={menuOpen} />
       )}
       <AnimatePresence mode="wait">
         <Routes location={location} key={location.pathname}>
-          <Route path="/" element={<LandingPage />} />
+          {/* "/" → Home Feed directly (TikTok/Instagram style) */}
+          <Route path="/" element={<HomePage />} />
+          <Route path="/feed" element={<HomePage />} />
+
+          {/* Auth */}
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
-          <Route path="/feed" element={<HomePage />} />
+
+          {/* App pages */}
           <Route path="/explore" element={<ExplorePage />} />
           <Route path="/upload" element={<UploadPage />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/project/:id" element={<ProjectDetailPage />} />
+          <Route path="/settings" element={<SettingsPage />} />
+
+          {/* Landing kept at /landing for reference */}
+          <Route path="/landing" element={<LandingPage />} />
+
+          {/* Convenience redirects */}
           <Route path="/trending" element={<Navigate to="/explore" />} />
           <Route path="/saved" element={<Navigate to="/feed" />} />
-          <Route path="/settings" element={<Navigate to="/profile" />} />
-          <Route path="/help" element={<Navigate to="/" />} />
+          <Route path="/help" element={<Navigate to="/settings" />} />
+
+          {/* 404 fallback */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </AnimatePresence>
