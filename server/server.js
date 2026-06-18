@@ -88,7 +88,7 @@ app.use(errorHandler);
 
 // ── Start server ─────────────────────────────────────────────────
 const { initSocket } = require('./socket/socketServer');
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5175;
 const server = app.listen(PORT, () => {
   console.log(`\n🚀 BuildTok API running on port ${PORT}`);
   console.log(`   Mode:        ${process.env.NODE_ENV || 'development'}`);
