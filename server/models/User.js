@@ -104,8 +104,20 @@ const userSchema = new mongoose.Schema(
     privacySettings: {
       privateAccount: { type: Boolean, default: false },
       activityStatus: { type: Boolean, default: true },
-      commentPermissions: { type: String, enum: ['everyone', 'followers', 'nobody'], default: 'everyone' },
-      messagePermissions: { type: String, enum: ['everyone', 'followers', 'nobody'], default: 'everyone' },
+      commentPermission: { type: String, enum: ['everyone', 'followers', 'nobody'], default: 'everyone' },
+      messagePermission: { type: String, enum: ['everyone', 'followers', 'nobody'], default: 'everyone' },
+      blockedUsers: [
+        {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'User',
+        },
+      ],
+      mutedUsers: [
+        {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'User',
+        },
+      ],
     },
     notificationSettings: {
       likes: { type: Boolean, default: true },
@@ -195,11 +207,36 @@ userSchema.methods.toPublicJSON = function () {
     verified: this.verified,
     badge: this.badge,
     phone: this.phone || '',
-    privacySettings: this.privacySettings || {
+    privacySettings: this.privacySettings ? {
+      privateAccount: this.privacySettings.privateAccount ?? false,
+      activityStatus: this.privacySettings.activityStatus ?? true,
+      commentPermission: this.privacySettings.commentPermission || this.privacySettings.commentPermissions || 'everyone',
+      messagePermission: this.privacySettings.messagePermission || this.privacySettings.messagePermissions || 'everyone',
+      blockedUsers: (this.privacySettings.blockedUsers || []).map(u => 
+        u && typeof u === 'object' && u._id ? {
+          _id: u._id,
+          name: u.name,
+          username: u.username,
+          avatar: u.avatar,
+          isPro: u.isPro
+        } : u
+      ),
+      mutedUsers: (this.privacySettings.mutedUsers || []).map(u => 
+        u && typeof u === 'object' && u._id ? {
+          _id: u._id,
+          name: u.name,
+          username: u.username,
+          avatar: u.avatar,
+          isPro: u.isPro
+        } : u
+      ),
+    } : {
       privateAccount: false,
       activityStatus: true,
-      commentPermissions: 'everyone',
-      messagePermissions: 'everyone'
+      commentPermission: 'everyone',
+      messagePermission: 'everyone',
+      blockedUsers: [],
+      mutedUsers: []
     },
     notificationSettings: this.notificationSettings || {
       likes: true,

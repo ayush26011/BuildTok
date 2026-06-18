@@ -113,7 +113,9 @@ const getMe = asyncHandler(async (req, res) => {
   const user = await User.findById(req.user._id)
     .select('-password')
     .populate('followers', 'name username avatar isPro')
-    .populate('following', 'name username avatar isPro');
+    .populate('following', 'name username avatar isPro')
+    .populate('privacySettings.blockedUsers', 'name username avatar isPro')
+    .populate('privacySettings.mutedUsers', 'name username avatar isPro');
 
   if (!user) {
     res.status(404);

@@ -199,8 +199,10 @@ const updateSettings = asyncHandler(async (req, res) => {
     user.privacySettings = {
       privateAccount: req.body.privacySettings.privateAccount !== undefined ? req.body.privacySettings.privateAccount : user.privacySettings.privateAccount,
       activityStatus: req.body.privacySettings.activityStatus !== undefined ? req.body.privacySettings.activityStatus : user.privacySettings.activityStatus,
-      commentPermissions: req.body.privacySettings.commentPermissions || user.privacySettings.commentPermissions,
-      messagePermissions: req.body.privacySettings.messagePermissions || user.privacySettings.messagePermissions,
+      commentPermission: req.body.privacySettings.commentPermission || req.body.privacySettings.commentPermissions || user.privacySettings.commentPermission,
+      messagePermission: req.body.privacySettings.messagePermission || req.body.privacySettings.messagePermissions || user.privacySettings.messagePermission,
+      blockedUsers: req.body.privacySettings.blockedUsers !== undefined ? req.body.privacySettings.blockedUsers : user.privacySettings.blockedUsers,
+      mutedUsers: req.body.privacySettings.mutedUsers !== undefined ? req.body.privacySettings.mutedUsers : user.privacySettings.mutedUsers,
     };
   }
 
@@ -219,8 +221,8 @@ const updateSettings = asyncHandler(async (req, res) => {
   if (req.body.securitySettings) {
     user.securitySettings = {
       twoFactor: req.body.securitySettings.twoFactor !== undefined ? req.body.securitySettings.twoFactor : user.securitySettings.twoFactor,
-      loginActivity: user.securitySettings.loginActivity,
-      savedDevices: user.securitySettings.savedDevices,
+      loginActivity: req.body.securitySettings.loginActivity !== undefined ? req.body.securitySettings.loginActivity : user.securitySettings.loginActivity,
+      savedDevices: req.body.securitySettings.savedDevices !== undefined ? req.body.securitySettings.savedDevices : user.securitySettings.savedDevices,
     };
   }
 
@@ -244,6 +246,10 @@ const updateSettings = asyncHandler(async (req, res) => {
   }
 
   const updatedUser = await user.save();
+  await updatedUser.populate([
+    { path: 'privacySettings.blockedUsers', select: 'name username avatar isPro' },
+    { path: 'privacySettings.mutedUsers', select: 'name username avatar isPro' }
+  ]);
 
   res.json({
     success: true,

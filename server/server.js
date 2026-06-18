@@ -14,6 +14,7 @@ const userRoutes = require('./routes/userRoutes');
 const projectRoutes = require('./routes/projectRoutes');
 const commentRoutes = require('./routes/commentRoutes');
 const messageRoutes = require('./routes/messageRoutes');
+const supportRoutes = require('./routes/supportRoutes');
 
 // Load Cloudinary to output configuration diagnostics on startup
 require('./config/cloudinary');
@@ -64,6 +65,7 @@ app.use('/api/users',    userRoutes);
 app.use('/api/projects', projectRoutes);
 app.use('/api/comments', commentRoutes);
 app.use('/api/messages', messageRoutes);
+app.use('/api/support',  supportRoutes);
 
 // ── Root info ───────────────────────────────────────────────────
 app.get('/', (req, res) => {
