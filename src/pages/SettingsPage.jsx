@@ -13,6 +13,7 @@ import { useTheme } from '../context/ThemeContext';
 import Sidebar from '../components/layout/Sidebar';
 import BottomNav from '../components/layout/BottomNav';
 import ProBadge from '../components/ui/ProBadge';
+import Avatar from '../components/ui/Avatar';
 import { pageVariants, fadeUpVariants } from '../utils/animations';
 
 // ─── Reusable toggle ─────────────────────────────────────────────
@@ -445,17 +446,7 @@ export default function SettingsPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
           >
-            {user.avatar?.url ? (
-              <img
-                src={user.avatar.url}
-                alt={user.name}
-                className="w-14 h-14 rounded-2xl object-cover shrink-0 border border-[#561C24]/10"
-              />
-            ) : (
-              <div className="w-14 h-14 rounded-2xl bg-maroon-gradient flex items-center justify-center text-cream-light text-xl font-extrabold shrink-0">
-                {user.name ? user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : '?'}
-              </div>
-            )}
+            <Avatar user={user} size="xmd" ring={false} />
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
                 <span className="font-bold text-[#561C24] dark:text-cream truncate">{user.name}</span>

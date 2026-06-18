@@ -232,6 +232,8 @@ export default function ProjectDetailPage() {
 
   const techList = project.techStack || project.tech || [];
   const tagList = project.tags || [];
+  const videoSrc = typeof project.videoUrl === 'string' ? project.videoUrl : project.videoUrl?.url;
+  const hasVideo = !!videoSrc;
   const creatorFollowers = project.creator.followersCount || (Array.isArray(project.creator.followers) ? project.creator.followers.length : (parseInt(project.creator.followers) || 0));
   const creatorProjects = project.creator.projectsCount || (Array.isArray(project.creator.projects) ? project.creator.projects.length : (parseInt(project.creator.projects) || 0));
 
@@ -258,36 +260,48 @@ export default function ProjectDetailPage() {
             <div className="space-y-6">
               {/* Project showcase */}
               <motion.div
-                className="rounded-4xl overflow-hidden relative h-80 sm:h-96"
-                style={{ background: getGradient(project) }}
+                className="rounded-4xl overflow-hidden relative h-80 sm:h-96 bg-black"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 }}
               >
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="text-center space-y-4">
-                    <motion.div
-                      className="text-8xl opacity-30"
-                      animate={{ rotate: 360 }}
-                      transition={{ duration: 30, repeat: Infinity, ease: 'linear' }}
-                    >
-                      {project.category === 'AI' ? '🧠' :
-                       project.category === 'Design' ? '🎨' :
-                       project.category === 'Mobile' ? '📱' :
-                       project.category === 'Robotics' ? '🤖' : '💻'}
-                    </motion.div>
-                    <div className="flex flex-wrap gap-2 justify-center">
-                      {techList.map(t => (
-                        <span key={t} className="px-3 py-1.5 rounded-full bg-white/15 backdrop-blur-sm text-white text-sm font-bold">
-                          {t}
-                        </span>
-                      ))}
+                {hasVideo ? (
+                  <video
+                    src={videoSrc}
+                    className="w-full h-full object-cover"
+                    autoPlay
+                    muted
+                    loop
+                    playsInline
+                    controls
+                    onError={(e) => console.error("❌ Error loading video in details:", project.title, e)}
+                  />
+                ) : (
+                  <div className="absolute inset-0 flex items-center justify-center" style={{ background: getGradient(project) }}>
+                    <div className="text-center space-y-4">
+                      <motion.div
+                        className="text-8xl opacity-30"
+                        animate={{ rotate: 360 }}
+                        transition={{ duration: 30, repeat: Infinity, ease: 'linear' }}
+                      >
+                        {project.category === 'AI' ? '🧠' :
+                         project.category === 'Design' ? '🎨' :
+                         project.category === 'Mobile' ? '📱' :
+                         project.category === 'Robotics' ? '🤖' : '💻'}
+                      </motion.div>
+                      <div className="flex flex-wrap gap-2 justify-center">
+                        {techList.map(t => (
+                          <span key={t} className="px-3 py-1.5 rounded-full bg-white/15 backdrop-blur-sm text-white text-sm font-bold">
+                            {t}
+                          </span>
+                        ))}
+                      </div>
                     </div>
                   </div>
-                </div>
+                )}
 
                 {/* Overlay info */}
-                <div className="absolute bottom-0 left-0 right-0 p-6"
+                <div className="absolute bottom-0 left-0 right-0 p-6 z-10 pointer-events-none"
                   style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 100%)' }}>
                   <h1 className="font-display font-extrabold text-3xl text-white mb-1">{project.title}</h1>
                   <p className="text-white/75 text-sm">{(project.views || 0).toLocaleString()} views</p>
@@ -366,17 +380,7 @@ export default function ProjectDetailPage() {
 
                 {/* Add comment */}
                 <div className="flex gap-3 mb-6">
-                  {authUser?.avatar?.url ? (
-                    <img
-                      src={authUser.avatar.url}
-                      alt={authUser.name}
-                      className="w-9 h-9 rounded-full object-cover border border-white/20 shrink-0"
-                    />
-                  ) : (
-                    <div className="w-9 h-9 rounded-full bg-maroon-gradient flex items-center justify-center text-cream-light text-xs font-bold shrink-0">
-                      {authUser ? getInitials(authUser.name) : 'ME'}
-                    </div>
-                  )}
+                  <Avatar user={authUser} size="sm" ring={true} className="shrink-0" />
                   <div className="flex-1 flex gap-2">
                     <input
                       id="add-comment-input"
@@ -404,17 +408,7 @@ export default function ProjectDetailPage() {
                   ) : (
                     comments.map(c => (
                       <div key={c._id || c.id} className="flex gap-3">
-                        {c.user?.avatar?.url ? (
-                          <img
-                            src={c.user.avatar.url}
-                            alt={c.user.name}
-                            className="w-9 h-9 rounded-full object-cover shrink-0"
-                          />
-                        ) : (
-                          <div className="w-9 h-9 rounded-full bg-maroon-gradient flex items-center justify-center text-cream-light text-xs font-bold shrink-0">
-                            {getInitials(c.user?.name)}
-                          </div>
-                        )}
+                        <Avatar user={c.user} size="sm" ring={false} className="shrink-0" />
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
                             <span className="font-bold text-sm text-[#561C24] dark:text-cream">{c.user?.name || 'Deleted User'}</span>
@@ -427,17 +421,7 @@ export default function ProjectDetailPage() {
                           {/* Nested Replies */}
                           {c.replies?.map(r => (
                             <div key={r._id || r.id} className="flex gap-2 mt-3 ml-4">
-                              {r.user?.avatar?.url ? (
-                                <img
-                                  src={r.user.avatar.url}
-                                  alt={r.user.name}
-                                  className="w-6 h-6 rounded-full object-cover shrink-0"
-                                />
-                              ) : (
-                                <div className="w-6 h-6 rounded-full bg-white/15 flex items-center justify-center text-cream-light text-[10px] font-bold shrink-0">
-                                  {getInitials(r.user?.name)}
-                                </div>
-                              )}
+                              <Avatar user={r.user} size="xxs" ring={false} className="shrink-0" />
                               <div>
                                 <div className="flex items-center gap-2 mb-0.5">
                                   <span className="font-bold text-xs text-[#561C24] dark:text-cream">{r.user?.name}</span>

@@ -116,17 +116,7 @@ function CommentPanel({ project, onClose }) {
         ) : (
           comments.map((c) => (
             <div key={c._id || c.id} className="flex gap-3">
-              {c.user?.avatar?.url ? (
-                <img
-                  src={c.user.avatar.url}
-                  alt={c.user.name}
-                  className="w-8 h-8 rounded-full object-cover border border-white/20 shrink-0"
-                />
-              ) : (
-                <div className="w-8 h-8 rounded-full bg-maroon-gradient flex items-center justify-center text-cream-light text-xs font-bold shrink-0">
-                  {getInitials(c.user?.name)}
-                </div>
-              )}
+              <Avatar user={c.user} size="xsm" ring={false} className="shrink-0" />
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-0.5">
                   <span className="text-xs font-bold text-white">{c.user?.name || 'Deleted User'}</span>
@@ -141,17 +131,7 @@ function CommentPanel({ project, onClose }) {
                   <div className="mt-3 pl-4 border-l border-white/10 space-y-3">
                     {c.replies.map((reply) => (
                       <div key={reply._id || reply.id} className="flex gap-2.5">
-                        {reply.user?.avatar?.url ? (
-                          <img
-                            src={reply.user.avatar.url}
-                            alt={reply.user.name}
-                            className="w-6 h-6 rounded-full object-cover shrink-0"
-                          />
-                        ) : (
-                          <div className="w-6 h-6 rounded-full bg-white/15 flex items-center justify-center text-cream-light text-[10px] font-bold shrink-0">
-                            {getInitials(reply.user?.name)}
-                          </div>
-                        )}
+                        <Avatar user={reply.user} size="xxs" ring={false} className="shrink-0" />
                         <div>
                           <div className="flex items-center gap-1.5 mb-0.5">
                             <span className="text-[11px] font-bold text-white/95">{reply.user?.name}</span>
