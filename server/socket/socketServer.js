@@ -5,13 +5,21 @@ let io = null;
 const onlineUsers = new Map(); // userId (string) -> Set of socketId (string)
 
 const initSocket = (server) => {
+  // Build allowed origins list — mirrors Express CORS config
+  const socketOrigins = [
+    'http://localhost:5173',
+    'http://localhost:5174',
+    'http://localhost:3000',
+    'https://build-tok.vercel.app',
+    ...((process.env.CLIENT_URL || '')
+      .split(',')
+      .map(u => u.trim())
+      .filter(Boolean)),
+  ];
+
   io = new Server(server, {
     cors: {
-      origin: [
-        process.env.CLIENT_URL || 'http://localhost:5173',
-        'http://localhost:5174', // Alternate local client ports
-        'http://localhost:3000',
-      ],
+      origin: socketOrigins,
       credentials: true,
       methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     },

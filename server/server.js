@@ -25,15 +25,21 @@ connectDB();
 const app = express();
 
 // ── CORS ───────────────────────────────────────────────────────
+// Parse comma-separated CLIENT_URL env var so a single env var can list multiple origins
 const allowedOrigins = [
-  process.env.CLIENT_URL || 'http://localhost:5173',
-  'http://localhost:5174',  // Vite alternate port
+  'http://localhost:5173',
+  'http://localhost:5174',
   'http://localhost:3000',
+  'https://build-tok.vercel.app',
+  ...((process.env.CLIENT_URL || '')
+    .split(',')
+    .map(u => u.trim())
+    .filter(Boolean)),
 ];
 
 app.use(cors({
   origin: (origin, callback) => {
-    // Allow requests with no origin (curl, Postman, mobile apps)
+    // Allow requests with no origin (curl, Postman, mobile apps, same-origin)
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
@@ -44,6 +50,9 @@ app.use(cors({
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
 }));
+
+// Pre-flight response for all routes
+app.options('*', cors());
 
 // ── Body parsers ────────────────────────────────────────────────
 app.use(express.json({ limit: '10mb' }));
