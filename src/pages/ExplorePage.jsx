@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { Search, X, TrendingUp, Heart, MessageCircle, Bookmark, CheckCircle, ExternalLink, GitBranch } from 'lucide-react';
+import { Search, X, TrendingUp, Heart, MessageSquare, Bookmark, CheckCircle, ExternalLink, GitBranch } from 'lucide-react';
 import { TRENDING_CATEGORIES } from '../data/mockData';
 import { projectService } from '../services/projectService';
 import { userService } from '../services/userService';
@@ -187,16 +187,23 @@ function CreatorRow({ user }) {
           </p>
         )}
       </div>
-      {!isSelf && currentUser && (
-        <motion.button
-          onClick={handleFollow}
-          className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all ${
-            following ? 'bg-[#561C24]/10 text-[#561C24] dark:text-cream' : 'bg-maroon-gradient text-cream-light'
-          }`}
-          whileTap={{ scale: 0.95 }}
-        >
-          {following ? '✓' : showFollowBack ? 'Follow Back' : 'Follow'}
-        </motion.button>
+      {!isSelf && currentUser && (user._id || user.id) && (
+        <div className="flex items-center gap-1.5">
+          <Link to={`/messages?recipientId=${user._id || user.id}`}>
+            <button className="p-1.5 rounded-full glass hover:bg-[#561C24]/10 text-[#561C24] dark:text-cream transition-colors" title="Message">
+              <MessageSquare size={13} />
+            </button>
+          </Link>
+          <motion.button
+            onClick={handleFollow}
+            className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all ${
+              following ? 'bg-[#561C24]/10 text-[#561C24] dark:text-cream' : 'bg-maroon-gradient text-cream-light'
+            }`}
+            whileTap={{ scale: 0.95 }}
+          >
+            {following ? '✓' : showFollowBack ? 'Follow Back' : 'Follow'}
+          </motion.button>
+        </div>
       )}
     </div>
   );

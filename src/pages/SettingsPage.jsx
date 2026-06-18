@@ -333,9 +333,17 @@ function LogoutModal({ onConfirm, onCancel }) {
 
 // ─── Main Settings Page ───────────────────────────────────────────
 export default function SettingsPage() {
-  const { user: authUser, logout } = useAuth();
+  const { user: authUser, logout, loading: authLoading } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
+
+  if (authLoading) {
+    return (
+      <div className="flex min-h-screen bg-ambient items-center justify-center">
+        <div className="w-10 h-10 rounded-full border-2 border-[#561C24]/30 border-t-[#561C24] animate-spin" />
+      </div>
+    );
+  }
 
   if (!authUser) {
     return <Navigate to="/login" replace />;

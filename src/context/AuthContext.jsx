@@ -4,7 +4,17 @@ import { authService } from '../services/authService';
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(() => {
+    const stored = localStorage.getItem('buildtok_user');
+    if (stored) {
+      try {
+        return JSON.parse(stored);
+      } catch (e) {
+        return null;
+      }
+    }
+    return null;
+  });
   const [loading, setLoading] = useState(true);
 
   const fetchCurrentUser = async () => {
@@ -13,11 +23,13 @@ export function AuthProvider({ children }) {
       if (response.success && response.data) {
         setUser(response.data);
         localStorage.setItem('buildtok_user', JSON.stringify(response.data));
-      } else {
-        logout();
       }
     } catch (err) {
-      logout();
+      console.error('Failed to fetch current user profile:', err);
+      // Only logout if token is invalid or expired (401 / 403)
+      if (err.status === 401 || err.status === 403) {
+        logout();
+      }
     } finally {
       setLoading(false);
     }
@@ -25,11 +37,7 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     const token = localStorage.getItem('buildtok_token');
-    const stored = localStorage.getItem('buildtok_user');
     if (token) {
-      if (stored) {
-        try { setUser(JSON.parse(stored)); } catch {}
-      }
       fetchCurrentUser();
     } else {
       setLoading(false);

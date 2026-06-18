@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams, Link, Navigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, CheckCircle, Users } from 'lucide-react';
+import { ArrowLeft, CheckCircle, Users, MessageCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { userService } from '../services/userService';
 import Sidebar from '../components/layout/Sidebar';
@@ -12,7 +12,7 @@ import SkeletonLoader from '../components/ui/SkeletonLoader';
 import { pageVariants, fadeUpVariants, staggerContainerVariants, scaleInVariants } from '../utils/animations';
 
 export default function FollowListPage({ type }) {
-  const { user: currentUser, setUser: setCurrentUser } = useAuth();
+  const { user: currentUser, setUser: setCurrentUser, loading: authLoading } = useAuth();
   const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState(true);
   const [profileUser, setProfileUser] = useState(null);
@@ -85,6 +85,14 @@ export default function FollowListPage({ type }) {
     const listedFollowingIds = (listedUser.following || []).map(f => typeof f === 'string' ? f : f._id || f.id);
     return listedFollowingIds.includes(currentId);
   };
+
+  if (authLoading) {
+    return (
+      <div className="flex min-h-screen bg-ambient items-center justify-center">
+        <div className="w-10 h-10 rounded-full border-2 border-[#561C24]/30 border-t-[#561C24] animate-spin" />
+      </div>
+    );
+  }
 
   if (!targetId) {
     return <Navigate to="/login" replace />;
@@ -199,18 +207,25 @@ export default function FollowListPage({ type }) {
                         </div>
                       </Link>
 
-                      {!isSelf && currentUser && (
-                        <motion.button
-                          onClick={() => handleFollowToggle(u)}
-                          className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all shrink-0 ${
-                            followingThis
-                              ? 'bg-[#561C24]/10 text-[#561C24] dark:text-cream hover:bg-[#561C24]/15'
-                              : 'bg-maroon-gradient text-cream-light hover:opacity-90'
-                          }`}
-                          whileTap={{ scale: 0.95 }}
-                        >
-                          {followingThis ? 'Following' : showFollowBack ? 'Follow Back' : 'Follow'}
-                        </motion.button>
+                      {!isSelf && currentUser && (u._id || u.id) && (
+                        <div className="flex items-center gap-2 shrink-0">
+                          <Link to={`/messages?recipientId=${u._id || u.id}`} className="shrink-0">
+                            <button className="p-2 rounded-full glass hover:bg-[#561C24]/10 text-[#561C24] dark:text-cream transition-colors" title="Message">
+                              <MessageCircle size={13} />
+                            </button>
+                          </Link>
+                          <motion.button
+                            onClick={() => handleFollowToggle(u)}
+                            className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${
+                              followingThis
+                                ? 'bg-[#561C24]/10 text-[#561C24] dark:text-cream hover:bg-[#561C24]/15'
+                                : 'bg-maroon-gradient text-cream-light hover:opacity-90'
+                            }`}
+                            whileTap={{ scale: 0.95 }}
+                          >
+                            {followingThis ? 'Following' : showFollowBack ? 'Follow Back' : 'Follow'}
+                          </motion.button>
+                        </div>
                       )}
                     </motion.div>
                   );

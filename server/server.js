@@ -13,6 +13,7 @@ const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
 const projectRoutes = require('./routes/projectRoutes');
 const commentRoutes = require('./routes/commentRoutes');
+const messageRoutes = require('./routes/messageRoutes');
 
 // Load Cloudinary to output configuration diagnostics on startup
 require('./config/cloudinary');
@@ -62,6 +63,7 @@ app.use('/api/auth',     authRoutes);
 app.use('/api/users',    userRoutes);
 app.use('/api/projects', projectRoutes);
 app.use('/api/comments', commentRoutes);
+app.use('/api/messages', messageRoutes);
 
 // ── Root info ───────────────────────────────────────────────────
 app.get('/', (req, res) => {
@@ -83,6 +85,7 @@ app.use(notFound);
 app.use(errorHandler);
 
 // ── Start server ─────────────────────────────────────────────────
+const { initSocket } = require('./socket/socketServer');
 const PORT = process.env.PORT || 5000;
 const server = app.listen(PORT, () => {
   console.log(`\n🚀 BuildTok API running on port ${PORT}`);
@@ -90,6 +93,7 @@ const server = app.listen(PORT, () => {
   console.log(`   Health:      http://localhost:${PORT}/health`);
   console.log(`   Docs:        http://localhost:${PORT}/\n`);
 });
+initSocket(server);
 
 // ── Graceful shutdown ─────────────────────────────────────────────
 const gracefulShutdown = (signal) => {

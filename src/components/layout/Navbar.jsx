@@ -2,15 +2,17 @@ import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Search, Bell, Moon, Sun, Menu, X, Zap, PlusSquare, LogOut, User
+  Search, Bell, Moon, Sun, Menu, X, Zap, PlusSquare, LogOut, User, MessageSquare
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
+import { useSocket } from '../../context/SocketContext';
 import Avatar from '../ui/Avatar';
 import Button from '../ui/Button';
 
 export default function Navbar({ onMenuToggle, menuOpen }) {
   const { user, logout } = useAuth();
+  const { unreadCount } = useSocket();
   const { theme, toggleTheme } = useTheme();
   const location = useLocation();
   const navigate = useNavigate();
@@ -116,6 +118,23 @@ export default function Navbar({ onMenuToggle, menuOpen }) {
           >
             {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
           </motion.button>
+
+          {user && (
+            <Link to="/messages" id="nav-messages-btn">
+              <motion.button
+                className="w-9 h-9 rounded-full glass flex items-center justify-center text-[#561C24]/70 hover:text-[#561C24] transition-colors relative"
+                whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.95 }}
+                title="Messages"
+              >
+                <MessageSquare size={16} />
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-cream-light font-bold text-[9px] w-4 h-4 rounded-full flex items-center justify-center border border-white dark:border-[#1a1a2e] shadow-maroon">
+                    {unreadCount}
+                  </span>
+                )}
+              </motion.button>
+            </Link>
+          )}
 
           {user ? (
             <>

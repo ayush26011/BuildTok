@@ -5,6 +5,7 @@ import { heartVariants } from '../../utils/animations';
 import { useAuth } from '../../context/AuthContext';
 import { projectService } from '../../services/projectService';
 import { userService } from '../../services/userService';
+import ShareProjectModal from '../messages/ShareProjectModal';
 
 export default function ReelActions({ project, onComment }) {
   const { user: currentUser, setUser } = useAuth();
@@ -14,6 +15,7 @@ export default function ReelActions({ project, onComment }) {
   const [likeCount, setLikeCount] = useState(0);
   const [saveCount, setSaveCount] = useState(0);
   const [shared, setShared] = useState(false);
+  const [isShareOpen, setIsShareOpen] = useState(false);
 
   useEffect(() => {
     if (project) {
@@ -94,8 +96,7 @@ export default function ReelActions({ project, onComment }) {
   };
 
   const handleShare = () => {
-    setShared(true);
-    setTimeout(() => setShared(false), 2000);
+    setIsShareOpen(true);
   };
 
   const actions = [
@@ -214,6 +215,15 @@ export default function ReelActions({ project, onComment }) {
           </a>
         )}
       </div>
+      <AnimatePresence>
+        {isShareOpen && (
+          <ShareProjectModal
+            isOpen={isShareOpen}
+            onClose={() => setIsShareOpen(false)}
+            projectId={project._id || project.id}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

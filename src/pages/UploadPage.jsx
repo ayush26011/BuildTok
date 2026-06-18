@@ -86,7 +86,14 @@ function DropZone({ onFile, file, uploading, progress }) {
 }
 
 export default function UploadPage() {
-  const { user: currentUser } = useAuth();
+  const { user: currentUser, loading: authLoading } = useAuth();
+  if (authLoading) {
+    return (
+      <div className="flex min-h-screen bg-ambient items-center justify-center">
+        <div className="w-10 h-10 rounded-full border-2 border-[#561C24]/30 border-t-[#561C24] animate-spin" />
+      </div>
+    );
+  }
   if (!currentUser) {
     return <Navigate to="/login" replace />;
   }

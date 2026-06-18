@@ -2,9 +2,10 @@ import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   Home, Compass, Upload, User, Zap, TrendingUp,
-  Bookmark, Settings, HelpCircle, ChevronLeft, ChevronRight
+  Bookmark, Settings, HelpCircle, ChevronLeft, ChevronRight, MessageCircle
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { useSocket } from '../../context/SocketContext';
 import Avatar from '../ui/Avatar';
 import Badge from '../ui/Badge';
 import { useState } from 'react';
@@ -14,6 +15,7 @@ const NAV_ITEMS = [
   { icon: Compass, label: 'Explore', to: '/explore', id: 'nav-explore' },
   { icon: Upload, label: 'Upload', to: '/upload', id: 'nav-upload' },
   { icon: Bookmark, label: 'Saved', to: '/saved', id: 'nav-saved' },
+  { icon: MessageCircle, label: 'Messages', to: '/messages', id: 'nav-messages' },
   { icon: TrendingUp, label: 'Trending', to: '/trending', id: 'nav-trending' },
   { icon: User, label: 'Profile', to: '/profile', id: 'nav-profile' },
 ];
@@ -21,6 +23,7 @@ const NAV_ITEMS = [
 export default function Sidebar() {
   const location = useLocation();
   const { user } = useAuth();
+  const { unreadCount } = useSocket();
   const [collapsed, setCollapsed] = useState(false);
 
   return (
@@ -64,7 +67,7 @@ export default function Sidebar() {
           return (
             <Link key={to} to={to} id={id}>
               <motion.div
-                className={`sidebar-item ${active ? 'active' : ''} ${collapsed ? 'justify-center' : ''}`}
+                className={`sidebar-item relative ${active ? 'active' : ''} ${collapsed ? 'justify-center' : ''}`}
                 whileHover={{ x: collapsed ? 0 : 4 }}
                 title={collapsed ? label : undefined}
               >
@@ -74,6 +77,13 @@ export default function Sidebar() {
                 )}
                 {!collapsed && label === 'Upload' && (
                   <span className="ml-auto w-2 h-2 rounded-full bg-[#561C24] animate-pulse" />
+                )}
+                {label === 'Messages' && unreadCount > 0 && (
+                  <span className={`rounded-full bg-red-500 text-cream-light font-bold text-[9px] flex items-center justify-center shadow-maroon shrink-0 ${
+                    collapsed ? 'absolute top-1 right-2 w-4.5 h-4.5 border border-white dark:border-[#1a1a2e]' : 'ml-auto w-5 h-5'
+                  }`}>
+                    {unreadCount}
+                  </span>
                 )}
               </motion.div>
             </Link>

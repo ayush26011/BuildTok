@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft, Heart, MessageCircle, Bookmark, Share2, GitBranch, ExternalLink, CheckCircle, Send } from 'lucide-react';
+import ShareProjectModal from '../components/messages/ShareProjectModal';
 import { useAuth } from '../context/AuthContext';
 import { projectService } from '../services/projectService';
 import { userService } from '../services/userService';
@@ -50,6 +51,7 @@ export default function ProjectDetailPage() {
   const [likeCount, setLikeCount] = useState(0);
   const [saveCount, setSaveCount] = useState(0);
   const [commentInput, setCommentInput] = useState('');
+  const [isShareOpen, setIsShareOpen] = useState(false);
 
   const fmt = (n) => n >= 1000 ? `${(n / 1000).toFixed(1)}K` : n;
 
@@ -314,7 +316,7 @@ export default function ProjectDetailPage() {
                   { icon: Heart, count: fmt(likeCount), active: liked, onClick: handleLike, color: 'red' },
                   { icon: MessageCircle, count: fmt(comments.length), color: null },
                   { icon: Bookmark, count: fmt(saveCount), active: saved, onClick: handleSave },
-                  { icon: Share2, count: fmt(project.shares || 0) },
+                  { icon: Share2, count: fmt(project.shares || 0), onClick: () => setIsShareOpen(true) },
                 ].map(({ icon: Icon, count, active, onClick, color }, i) => (
                   <motion.button
                     key={i}
@@ -345,6 +347,15 @@ export default function ProjectDetailPage() {
                   )}
                 </div>
               </div>
+              <AnimatePresence>
+                {isShareOpen && (
+                  <ShareProjectModal
+                    isOpen={isShareOpen}
+                    onClose={() => setIsShareOpen(false)}
+                    projectId={project._id || project.id}
+                  />
+                )}
+              </AnimatePresence>
 
               {/* Description */}
               <div className="glass rounded-3xl p-6">
@@ -479,16 +490,23 @@ export default function ProjectDetailPage() {
                 </div>
                 
                 {project.creator._id !== authUser?._id && project.creator.id !== authUser?.id && (
-                  <motion.button
-                    id="project-follow-creator-btn"
-                    onClick={handleFollow}
-                    className={`w-full py-2.5 rounded-xl text-sm font-bold transition-all ${
-                      following ? 'bg-[#561C24]/10 text-[#561C24] dark:text-cream border border-[#561C24]/20' : 'bg-maroon-gradient text-cream-light shadow-maroon'
-                    }`}
-                    whileTap={{ scale: 0.97 }}
-                  >
-                    {following ? '✓ Following' : '+ Follow Creator'}
-                  </motion.button>
+                  <div className="space-y-2 mt-4">
+                    <motion.button
+                      id="project-follow-creator-btn"
+                      onClick={handleFollow}
+                      className={`w-full py-2.5 rounded-xl text-sm font-bold transition-all ${
+                        following ? 'bg-[#561C24]/10 text-[#561C24] dark:text-cream border border-[#561C24]/20' : 'bg-maroon-gradient text-cream-light shadow-maroon'
+                      }`}
+                      whileTap={{ scale: 0.97 }}
+                    >
+                      {following ? '✓ Following' : '+ Follow Creator'}
+                    </motion.button>
+                    <Link to={`/messages?recipientId=${project.creator._id || project.creator.id}`} className="block w-full">
+                      <button className="w-full py-2.5 rounded-xl text-sm font-bold btn-ghost border border-[#561C24]/10">
+                        Message Creator
+                      </button>
+                    </Link>
+                  </div>
                 )}
               </div>
 

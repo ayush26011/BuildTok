@@ -364,7 +364,7 @@ function EditProfileModal({ isOpen, onClose, user, onSave }) {
 }
 
 export default function ProfilePage() {
-  const { user: authUser, setUser: setAuthUser } = useAuth();
+  const { user: authUser, setUser: setAuthUser, loading: authLoading } = useAuth();
   const [searchParams] = useSearchParams();
   const [profileUser, setProfileUser] = useState(null);
   const [userProjects, setUserProjects] = useState([]);
@@ -451,6 +451,20 @@ export default function ProfilePage() {
   const fmt = (n) => n >= 1000000 ? `${(n/1000000).toFixed(1)}M` : n >= 1000 ? `${(n/1000).toFixed(1)}K` : n;
 
   if (loading) {
+    return (
+      <div className="flex min-h-screen bg-ambient">
+        <Sidebar />
+        <div className="flex-1 lg:ml-60 pt-16 px-6 max-w-5xl mx-auto flex flex-col justify-center">
+          <SkeletonLoader type="profile" />
+          <div className="mt-8">
+            <SkeletonLoader type="card" count={2} />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (authLoading) {
     return (
       <div className="flex min-h-screen bg-ambient">
         <Sidebar />
@@ -585,7 +599,11 @@ export default function ProfilePage() {
                   >
                     {following ? '✓ Following' : '+ Follow'}
                   </motion.button>
-                  <button className="btn-ghost !py-2 !px-5 text-sm">Message</button>
+                  {(user._id || user.id) && (
+                    <Link to={`/messages?recipientId=${user._id || user.id}`}>
+                      <button className="btn-ghost !py-2 !px-5 text-sm" id="profile-message-btn">Message</button>
+                    </Link>
+                  )}
                 </>
               )}
             </div>

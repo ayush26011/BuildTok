@@ -23,6 +23,10 @@ const injectToken = (config) => {
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+  // Log request for message APIs
+  if (config.url && config.url.includes('/messages')) {
+    console.log(`[API Request] ${config.method?.toUpperCase()} ${config.url}`, config.data || '');
+  }
   return config;
 };
 
@@ -33,12 +37,26 @@ const formatError = (error) => {
     error.response?.data?.error ||
     error.message ||
     'An unexpected error occurred';
-  return Promise.reject(new Error(errorMessage));
+  const customError = new Error(errorMessage);
+  customError.status = error.response?.status;
+  customError.originalError = error;
+
+  // Log error for message APIs
+  if (error.config?.url?.includes('/messages')) {
+    console.error(`[API Error] ${error.config.url} Status: ${error.response?.status || 'unknown'}: ${errorMessage}`);
+  }
+  return Promise.reject(customError);
 };
 
 // Apply interceptors to both instances
 API.interceptors.request.use(injectToken, (e) => Promise.reject(e));
-API.interceptors.response.use((r) => r.data, formatError);
+API.interceptors.response.use((r) => {
+  // Log successful response for message APIs
+  if (r.config?.url?.includes('/messages')) {
+    console.log(`[API Response] ${r.config.url} Status: ${r.status}`, r.data);
+  }
+  return r.data;
+}, formatError);
 
 UPLOAD_API.interceptors.request.use(injectToken, (e) => Promise.reject(e));
 UPLOAD_API.interceptors.response.use((r) => r.data, formatError);
