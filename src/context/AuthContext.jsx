@@ -68,10 +68,11 @@ export function AuthProvider({ children }) {
     throw new Error('Registration failed');
   };
 
-  const logout = () => {
+  const logout = (callback) => {
     setUser(null);
     localStorage.removeItem('buildtok_token');
     localStorage.removeItem('buildtok_user');
+    if (typeof callback === 'function') callback();
   };
 
   return (

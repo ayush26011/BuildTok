@@ -181,4 +181,114 @@ const searchUsers = asyncHandler(async (req, res) => {
   res.json({ success: true, data: users });
 });
 
-module.exports = { getUserById, updateProfile, followUser, searchUsers };
+// ─────────────────────────────────────────────────────────────────
+// @desc    Update authenticated user settings (privacy, notifications, phone, etc)
+// @route   PUT /api/users/settings
+// @access  Private
+// ─────────────────────────────────────────────────────────────────
+const updateSettings = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user._id);
+  if (!user) {
+    res.status(404);
+    throw new Error('User not found');
+  }
+
+  if (req.body.phone !== undefined) user.phone = req.body.phone;
+  
+  if (req.body.privacySettings) {
+    user.privacySettings = {
+      privateAccount: req.body.privacySettings.privateAccount !== undefined ? req.body.privacySettings.privateAccount : user.privacySettings.privateAccount,
+      activityStatus: req.body.privacySettings.activityStatus !== undefined ? req.body.privacySettings.activityStatus : user.privacySettings.activityStatus,
+      commentPermissions: req.body.privacySettings.commentPermissions || user.privacySettings.commentPermissions,
+      messagePermissions: req.body.privacySettings.messagePermissions || user.privacySettings.messagePermissions,
+    };
+  }
+
+  if (req.body.notificationSettings) {
+    user.notificationSettings = {
+      likes: req.body.notificationSettings.likes !== undefined ? req.body.notificationSettings.likes : user.notificationSettings.likes,
+      comments: req.body.notificationSettings.comments !== undefined ? req.body.notificationSettings.comments : user.notificationSettings.comments,
+      follows: req.body.notificationSettings.follows !== undefined ? req.body.notificationSettings.follows : user.notificationSettings.follows,
+      trending: req.body.notificationSettings.trending !== undefined ? req.body.notificationSettings.trending : user.notificationSettings.trending,
+      collab: req.body.notificationSettings.collab !== undefined ? req.body.notificationSettings.collab : user.notificationSettings.collab,
+      email: req.body.notificationSettings.email !== undefined ? req.body.notificationSettings.email : user.notificationSettings.email,
+      push: req.body.notificationSettings.push !== undefined ? req.body.notificationSettings.push : user.notificationSettings.push,
+    };
+  }
+
+  if (req.body.securitySettings) {
+    user.securitySettings = {
+      twoFactor: req.body.securitySettings.twoFactor !== undefined ? req.body.securitySettings.twoFactor : user.securitySettings.twoFactor,
+      loginActivity: user.securitySettings.loginActivity,
+      savedDevices: user.securitySettings.savedDevices,
+    };
+  }
+
+  // Also support name, email, username updates here if called from Account settings
+  if (req.body.name !== undefined) user.name = req.body.name;
+  if (req.body.email !== undefined && req.body.email !== user.email) {
+    const emailExists = await User.findOne({ email: req.body.email.toLowerCase(), _id: { $ne: req.user._id } });
+    if (emailExists) {
+      res.status(400);
+      throw new Error('Email is already in use');
+    }
+    user.email = req.body.email.toLowerCase();
+  }
+  if (req.body.username !== undefined && req.body.username !== user.username) {
+    const usernameExists = await User.findOne({ username: req.body.username.toLowerCase(), _id: { $ne: req.user._id } });
+    if (usernameExists) {
+      res.status(400);
+      throw new Error('Username is already taken');
+    }
+    user.username = req.body.username.toLowerCase();
+  }
+
+  const updatedUser = await user.save();
+
+  res.json({
+    success: true,
+    message: 'Settings updated successfully',
+    data: updatedUser.toPublicJSON(),
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────
+// @desc    Change user password securely
+// @route   PUT /api/users/change-password
+// @access  Private
+// ─────────────────────────────────────────────────────────────────
+const changePassword = asyncHandler(async (req, res) => {
+  const { currentPassword, newPassword } = req.body;
+
+  if (!currentPassword || !newPassword) {
+    res.status(400);
+    throw new Error('Please provide current and new passwords');
+  }
+
+  if (newPassword.length < 8) {
+    res.status(400);
+    throw new Error('New password must be at least 8 characters');
+  }
+
+  const user = await User.findById(req.user._id).select('+password');
+  if (!user) {
+    res.status(404);
+    throw new Error('User not found');
+  }
+
+  const isMatch = await user.matchPassword(currentPassword);
+  if (!isMatch) {
+    res.status(401);
+    throw new Error('Incorrect current password');
+  }
+
+  user.password = newPassword;
+  await user.save();
+
+  res.json({
+    success: true,
+    message: 'Password changed successfully',
+  });
+});
+
+module.exports = { getUserById, updateProfile, followUser, searchUsers, updateSettings, changePassword };

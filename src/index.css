@@ -56,6 +56,8 @@ html {
   scroll-behavior: smooth;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /* Prevent iOS text size adjustment */
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
@@ -64,6 +66,31 @@ body {
   color: var(--maroon-dark);
   overflow-x: hidden;
   transition: background-color 0.4s var(--transition-smooth), color 0.4s var(--transition-smooth);
+  /* iOS momentum scrolling */
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Remove tap highlight on mobile */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Safe-area bottom padding for notched phones (used by BottomNav pb-safe class) */
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Minimum touch target size (44px) for interactive elements on mobile */
+@media (max-width: 1024px) {
+  button, a, [role="button"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  /* Exception: inline/icon-only elements that are already sized */
+  .no-touch-min {
+    min-height: unset;
+    min-width: unset;
+  }
 }
 
 .dark body {

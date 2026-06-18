@@ -184,7 +184,7 @@ export default function Navbar({ onMenuToggle, menuOpen }) {
                       ))}
                       <button
                         className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-red-50 transition-colors mt-1"
-                        onClick={() => { logout(); navigate('/'); setProfileOpen(false); }}
+                        onClick={() => { logout(() => navigate('/login')); setProfileOpen(false); }}
                       >
                         <LogOut size={15} className="text-red-500" />
                         <span className="text-sm font-medium text-red-500">Sign Out</span>

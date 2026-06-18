@@ -23,10 +23,10 @@ export default class ErrorBoundary extends Component {
             <AlertCircle size={24} />
           </div>
           <h3 className="font-display font-extrabold text-sm text-red-500 mb-2">
-            Something went wrong rendering this chat.
+            Something went wrong
           </h3>
           <p className="text-[11px] text-white/40 max-w-[280px] mb-4">
-            {this.state.error?.message || 'Please try selecting another conversation.'}
+            {this.state.error?.message || 'An unexpected error occurred. Please try again.'}
           </p>
           <button
             onClick={() => {

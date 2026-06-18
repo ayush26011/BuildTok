@@ -97,6 +97,42 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: '',
     },
+    phone: {
+      type: String,
+      default: '',
+    },
+    privacySettings: {
+      privateAccount: { type: Boolean, default: false },
+      activityStatus: { type: Boolean, default: true },
+      commentPermissions: { type: String, enum: ['everyone', 'followers', 'nobody'], default: 'everyone' },
+      messagePermissions: { type: String, enum: ['everyone', 'followers', 'nobody'], default: 'everyone' },
+    },
+    notificationSettings: {
+      likes: { type: Boolean, default: true },
+      comments: { type: Boolean, default: true },
+      follows: { type: Boolean, default: true },
+      trending: { type: Boolean, default: true },
+      collab: { type: Boolean, default: false },
+      email: { type: Boolean, default: false },
+      push: { type: Boolean, default: true },
+    },
+    securitySettings: {
+      twoFactor: { type: Boolean, default: false },
+      loginActivity: [
+        {
+          device: { type: String, default: 'Mac OS X (Chrome)' },
+          location: { type: String, default: 'Mumbai, India' },
+          ip: { type: String, default: '127.0.0.1' },
+          date: { type: Date, default: Date.now }
+        }
+      ],
+      savedDevices: [
+        {
+          device: { type: String, default: 'Mac OS X (Chrome)' },
+          lastActive: { type: Date, default: Date.now }
+        }
+      ]
+    },
 
     // ── Account meta ──────────────────────────────────────────
     isActive: {
@@ -146,6 +182,7 @@ userSchema.methods.toPublicJSON = function () {
     _id: this._id,
     name: this.name,
     username: this.username,
+    email: this.email,
     avatar: this.avatar,
     bio: this.bio,
     skills: this.skills,
@@ -157,6 +194,27 @@ userSchema.methods.toPublicJSON = function () {
     isPro: this.isPro,
     verified: this.verified,
     badge: this.badge,
+    phone: this.phone || '',
+    privacySettings: this.privacySettings || {
+      privateAccount: false,
+      activityStatus: true,
+      commentPermissions: 'everyone',
+      messagePermissions: 'everyone'
+    },
+    notificationSettings: this.notificationSettings || {
+      likes: true,
+      comments: true,
+      follows: true,
+      trending: true,
+      collab: false,
+      email: false,
+      push: true
+    },
+    securitySettings: this.securitySettings || {
+      twoFactor: false,
+      loginActivity: [],
+      savedDevices: []
+    },
     createdAt: this.createdAt,
   };
 };

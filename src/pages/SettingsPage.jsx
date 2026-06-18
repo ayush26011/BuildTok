@@ -1,11 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useNavigate, Navigate } from 'react-router-dom';
 import {
   ArrowLeft, User, Lock, Bell, Zap, Shield, Palette, HelpCircle, Info,
   LogOut, ChevronRight, ChevronDown, Moon, Sun, Eye, EyeOff,
   Check, X, Crown, BarChart2, TrendingUp, Users, Star,
-  Smartphone, Globe, Mail, Phone, Settings,
+  Smartphone, Globe, Mail, Phone, Settings, Save, AlertCircle,
 } from 'lucide-react';
 import { motion as m } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
@@ -15,6 +15,7 @@ import BottomNav from '../components/layout/BottomNav';
 import ProBadge from '../components/ui/ProBadge';
 import Avatar from '../components/ui/Avatar';
 import { pageVariants, fadeUpVariants } from '../utils/animations';
+import API from '../services/api';
 
 // ─── Reusable toggle ─────────────────────────────────────────────
 function Toggle({ value, onChange, id }) {
@@ -122,9 +123,9 @@ function BuildTokProSection({ isPro }) {
 
   const faqs = [
     { q: 'Can I cancel anytime?', a: 'Yes! Cancel any time from your settings. Your Pro benefits continue until the end of your billing period.' },
-    { q: 'What is the verification badge?', a: 'A blue ✓ badge that appears next to your name everywhere on BuildTok, just like Instagram\'s blue tick.' },
+    { q: 'What is the verification badge?', a: "A blue ✓ badge that appears next to your name everywhere on BuildTok, just like Instagram's blue tick." },
     { q: 'How does the reach boost work?', a: 'Pro projects are algorithmically prioritized and shown to 10x more users in the feed and Explore.' },
-    { q: 'Is there a free trial?', a: 'Yes — new Pro subscribers get a 7-day free trial. Cancel before the trial ends and you won\'t be charged.' },
+    { q: 'Is there a free trial?', a: "Yes — new Pro subscribers get a 7-day free trial. Cancel before the trial ends and you won't be charged." },
   ];
 
   return (
@@ -136,7 +137,6 @@ function BuildTokProSection({ isPro }) {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          {/* Decorative circles */}
           <div className="absolute -top-12 -right-12 w-48 h-48 rounded-full bg-white/05" />
           <div className="absolute -bottom-8 -left-8 w-32 h-32 rounded-full bg-white/05" />
 
@@ -223,7 +223,6 @@ function BuildTokProSection({ isPro }) {
               </div>
             </div>
           ))}
-          {/* Header labels */}
           <div className="flex items-center gap-3 pt-2">
             <span className="flex-1" />
             <div className="flex items-center gap-5">
@@ -331,9 +330,257 @@ function LogoutModal({ onConfirm, onCancel }) {
   );
 }
 
+// ─── Edit Account Modal ───────────────────────────────────────────
+function EditAccountModal({ user, onClose, onSaved }) {
+  const [form, setForm] = useState({
+    name: user.name || '',
+    username: (user.username || '').replace('@', ''),
+    email: user.email || '',
+    phone: user.phone || '',
+  });
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleSave = async () => {
+    setError('');
+    setSaving(true);
+    try {
+      const res = await API.put('/users/settings', form);
+      if (res.success && res.data) {
+        onSaved(res.data);
+        onClose();
+      }
+    } catch (err) {
+      setError(err.message || 'Failed to save changes');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <motion.div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+    >
+      <motion.div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
+      <motion.div
+        className="relative glass rounded-3xl p-6 max-w-sm w-full"
+        initial={{ scale: 0.9, y: 20 }}
+        animate={{ scale: 1, y: 0 }}
+        exit={{ scale: 0.9, y: 20 }}
+      >
+        <div className="flex items-center justify-between mb-5">
+          <h3 className="font-display font-extrabold text-lg text-[#561C24] dark:text-cream">Edit Account</h3>
+          <button onClick={onClose} className="w-8 h-8 rounded-full bg-[#561C24]/08 flex items-center justify-center">
+            <X size={14} className="text-[#561C24]" />
+          </button>
+        </div>
+
+        {error && (
+          <div className="flex items-center gap-2 p-3 rounded-xl bg-red-500/10 border border-red-500/20 mb-4">
+            <AlertCircle size={14} className="text-red-500 shrink-0" />
+            <p className="text-xs text-red-500">{error}</p>
+          </div>
+        )}
+
+        <div className="space-y-3">
+          {[
+            { label: 'Full Name', key: 'name', icon: User, placeholder: 'Your full name' },
+            { label: 'Username', key: 'username', icon: User, placeholder: 'yourusername' },
+            { label: 'Email', key: 'email', icon: Mail, placeholder: 'you@email.com', type: 'email' },
+            { label: 'Phone', key: 'phone', icon: Phone, placeholder: '+91 98765 43210', type: 'tel' },
+          ].map(({ label, key, icon: Icon, placeholder, type = 'text' }) => (
+            <div key={key}>
+              <label className="text-xs font-semibold text-[#561C24]/70 dark:text-beige-warm/70 mb-1 block">{label}</label>
+              <div className="relative">
+                <Icon size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#561C24]/40" />
+                <input
+                  type={type}
+                  value={form[key]}
+                  onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))}
+                  placeholder={placeholder}
+                  className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-[#561C24]/05 dark:bg-white/05 border border-[#561C24]/10 text-sm text-[#561C24] dark:text-cream placeholder-[#561C24]/30 focus:outline-none focus:border-[#561C24]/30 transition-colors"
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="flex gap-3 mt-5">
+          <button onClick={onClose} className="flex-1 btn-ghost !py-2.5 text-sm">Cancel</button>
+          <motion.button
+            id="save-account-btn"
+            onClick={handleSave}
+            disabled={saving}
+            className="flex-1 py-2.5 rounded-xl bg-maroon-gradient text-cream-light font-bold text-sm disabled:opacity-60 flex items-center justify-center gap-2"
+            whileTap={{ scale: 0.97 }}
+          >
+            {saving ? (
+              <div className="w-4 h-4 rounded-full border-2 border-cream-light/30 border-t-cream-light animate-spin" />
+            ) : (
+              <><Save size={14} /> Save</>
+            )}
+          </motion.button>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+}
+
+// ─── Change Password Modal ────────────────────────────────────────
+function ChangePasswordModal({ onClose }) {
+  const [form, setForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
+  const [showCurrent, setShowCurrent] = useState(false);
+  const [showNew, setShowNew] = useState(false);
+
+  const handleSave = async () => {
+    setError('');
+    if (form.newPassword !== form.confirmPassword) {
+      setError('New passwords do not match');
+      return;
+    }
+    if (form.newPassword.length < 8) {
+      setError('New password must be at least 8 characters');
+      return;
+    }
+    setSaving(true);
+    try {
+      const res = await API.put('/users/change-password', {
+        currentPassword: form.currentPassword,
+        newPassword: form.newPassword,
+      });
+      if (res.success) {
+        setSuccess(true);
+        setTimeout(onClose, 1500);
+      }
+    } catch (err) {
+      setError(err.message || 'Failed to change password');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <motion.div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+    >
+      <motion.div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
+      <motion.div
+        className="relative glass rounded-3xl p-6 max-w-sm w-full"
+        initial={{ scale: 0.9, y: 20 }}
+        animate={{ scale: 1, y: 0 }}
+        exit={{ scale: 0.9, y: 20 }}
+      >
+        <div className="flex items-center justify-between mb-5">
+          <h3 className="font-display font-extrabold text-lg text-[#561C24] dark:text-cream">Change Password</h3>
+          <button onClick={onClose} className="w-8 h-8 rounded-full bg-[#561C24]/08 flex items-center justify-center">
+            <X size={14} className="text-[#561C24]" />
+          </button>
+        </div>
+
+        {success ? (
+          <div className="text-center py-4">
+            <div className="w-12 h-12 rounded-full bg-green-500/10 flex items-center justify-center mx-auto mb-3">
+              <Check size={22} className="text-green-500" />
+            </div>
+            <p className="font-semibold text-[#561C24] dark:text-cream">Password changed!</p>
+          </div>
+        ) : (
+          <>
+            {error && (
+              <div className="flex items-center gap-2 p-3 rounded-xl bg-red-500/10 border border-red-500/20 mb-4">
+                <AlertCircle size={14} className="text-red-500 shrink-0" />
+                <p className="text-xs text-red-500">{error}</p>
+              </div>
+            )}
+
+            <div className="space-y-3">
+              {/* Current password */}
+              <div>
+                <label className="text-xs font-semibold text-[#561C24]/70 dark:text-beige-warm/70 mb-1 block">Current Password</label>
+                <div className="relative">
+                  <Lock size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#561C24]/40" />
+                  <input
+                    type={showCurrent ? 'text' : 'password'}
+                    value={form.currentPassword}
+                    onChange={e => setForm(f => ({ ...f, currentPassword: e.target.value }))}
+                    placeholder="Enter current password"
+                    className="w-full pl-9 pr-9 py-2.5 rounded-xl bg-[#561C24]/05 dark:bg-white/05 border border-[#561C24]/10 text-sm text-[#561C24] dark:text-cream placeholder-[#561C24]/30 focus:outline-none focus:border-[#561C24]/30 transition-colors"
+                  />
+                  <button onClick={() => setShowCurrent(s => !s)} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#561C24]/40">
+                    {showCurrent ? <EyeOff size={14} /> : <Eye size={14} />}
+                  </button>
+                </div>
+              </div>
+
+              {/* New password */}
+              <div>
+                <label className="text-xs font-semibold text-[#561C24]/70 dark:text-beige-warm/70 mb-1 block">New Password</label>
+                <div className="relative">
+                  <Lock size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#561C24]/40" />
+                  <input
+                    type={showNew ? 'text' : 'password'}
+                    value={form.newPassword}
+                    onChange={e => setForm(f => ({ ...f, newPassword: e.target.value }))}
+                    placeholder="Min. 8 characters"
+                    className="w-full pl-9 pr-9 py-2.5 rounded-xl bg-[#561C24]/05 dark:bg-white/05 border border-[#561C24]/10 text-sm text-[#561C24] dark:text-cream placeholder-[#561C24]/30 focus:outline-none focus:border-[#561C24]/30 transition-colors"
+                  />
+                  <button onClick={() => setShowNew(s => !s)} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#561C24]/40">
+                    {showNew ? <EyeOff size={14} /> : <Eye size={14} />}
+                  </button>
+                </div>
+              </div>
+
+              {/* Confirm password */}
+              <div>
+                <label className="text-xs font-semibold text-[#561C24]/70 dark:text-beige-warm/70 mb-1 block">Confirm New Password</label>
+                <div className="relative">
+                  <Lock size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#561C24]/40" />
+                  <input
+                    type="password"
+                    value={form.confirmPassword}
+                    onChange={e => setForm(f => ({ ...f, confirmPassword: e.target.value }))}
+                    placeholder="Repeat new password"
+                    className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-[#561C24]/05 dark:bg-white/05 border border-[#561C24]/10 text-sm text-[#561C24] dark:text-cream placeholder-[#561C24]/30 focus:outline-none focus:border-[#561C24]/30 transition-colors"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-3 mt-5">
+              <button onClick={onClose} className="flex-1 btn-ghost !py-2.5 text-sm">Cancel</button>
+              <motion.button
+                id="save-password-btn"
+                onClick={handleSave}
+                disabled={saving || !form.currentPassword || !form.newPassword}
+                className="flex-1 py-2.5 rounded-xl bg-maroon-gradient text-cream-light font-bold text-sm disabled:opacity-60 flex items-center justify-center gap-2"
+                whileTap={{ scale: 0.97 }}
+              >
+                {saving ? (
+                  <div className="w-4 h-4 rounded-full border-2 border-cream-light/30 border-t-cream-light animate-spin" />
+                ) : (
+                  'Update Password'
+                )}
+              </motion.button>
+            </div>
+          </>
+        )}
+      </motion.div>
+    </motion.div>
+  );
+}
+
 // ─── Main Settings Page ───────────────────────────────────────────
 export default function SettingsPage() {
-  const { user: authUser, logout, loading: authLoading } = useAuth();
+  const { user: authUser, logout, loading: authLoading, setUser } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
 
@@ -353,27 +600,72 @@ export default function SettingsPage() {
 
   const [activeSection, setActiveSection] = useState(null);
   const [showLogout, setShowLogout] = useState(false);
+  const [showEditAccount, setShowEditAccount] = useState(false);
+  const [showChangePassword, setShowChangePassword] = useState(false);
   const [reduceMotion, setReduceMotion] = useState(false);
+  const [savingSettings, setSavingSettings] = useState(false);
 
-  // Notification toggles
+  // Notification toggles — seeded from user data
   const [notifs, setNotifs] = useState({
-    likes: true, comments: true, follows: true, trending: true,
-    collab: false, email: false, push: true,
+    likes: user.notificationSettings?.likes ?? true,
+    comments: user.notificationSettings?.comments ?? true,
+    follows: user.notificationSettings?.follows ?? true,
+    trending: user.notificationSettings?.trending ?? true,
+    collab: user.notificationSettings?.collab ?? false,
+    email: user.notificationSettings?.email ?? false,
+    push: user.notificationSettings?.push ?? true,
   });
 
-  // Privacy toggles
+  // Privacy toggles — seeded from user data
   const [privacy, setPrivacy] = useState({
-    privateAccount: false, activityStatus: true,
+    privateAccount: user.privacySettings?.privateAccount ?? false,
+    activityStatus: user.privacySettings?.activityStatus ?? true,
   });
 
-  // Security toggles
-  const [security, setSecurity] = useState({ twoFactor: false });
+  // Security toggles — seeded from user data
+  const [security, setSecurity] = useState({
+    twoFactor: user.securitySettings?.twoFactor ?? false,
+  });
 
-  const toggleNotif = (key) => setNotifs(n => ({ ...n, [key]: !n[key] }));
+  // ── Persist settings to backend ───────────────────────────────────
+  const persistSettings = useCallback(async (patch) => {
+    try {
+      const res = await API.put('/users/settings', patch);
+      if (res.success && res.data) {
+        // Sync updated user into AuthContext
+        localStorage.setItem('buildtok_user', JSON.stringify(res.data));
+        setUser(res.data);
+      }
+    } catch (err) {
+      console.error('Failed to persist settings:', err.message);
+    }
+  }, [setUser]);
+
+  const toggleNotif = (key) => {
+    const next = { ...notifs, [key]: !notifs[key] };
+    setNotifs(next);
+    persistSettings({ notificationSettings: next });
+  };
+
+  const handlePrivacyChange = (key, value) => {
+    const next = { ...privacy, [key]: value };
+    setPrivacy(next);
+    persistSettings({ privacySettings: next });
+  };
+
+  const handleSecurityChange = (key, value) => {
+    const next = { ...security, [key]: value };
+    setSecurity(next);
+    persistSettings({ securitySettings: next });
+  };
 
   const handleLogout = () => {
-    logout?.();
-    navigate('/login');
+    logout(() => navigate('/login', { replace: true }));
+  };
+
+  const handleAccountSaved = (updatedUser) => {
+    localStorage.setItem('buildtok_user', JSON.stringify(updatedUser));
+    setUser(updatedUser);
   };
 
   const sections = [
@@ -495,11 +787,21 @@ export default function SettingsPage() {
 
           {/* ─── ACCOUNT ─── */}
           <Section title="Account" icon={User}>
-            <SettingRow label="Edit Profile" desc="Name, bio, avatar, location" icon={User} />
+            <SettingRow
+              label="Edit Account"
+              desc="Name, username, email, phone"
+              icon={User}
+              onClick={() => setShowEditAccount(true)}
+            />
             <SettingRow label="Username" desc={user.username} icon={User} right={<span className="text-xs text-[#561C24]/50">{user.username}</span>} />
-            <SettingRow label="Email" desc="Set email address" icon={Mail} right={<span className="text-xs text-[#561C24]/50">••••@buildtok.dev</span>} />
-            <SettingRow label="Phone Number" desc="Add or change your phone" icon={Phone} />
-            <SettingRow label="Password" desc="Change your password" icon={Lock} />
+            <SettingRow
+              label="Email"
+              desc="Set email address"
+              icon={Mail}
+              right={<span className="text-xs text-[#561C24]/50">{user.email ? user.email.replace(/(.{2}).+(@.+)/, '$1••$2') : '••••@buildtok.dev'}</span>}
+            />
+            <SettingRow label="Phone Number" desc="Add or change your phone" icon={Phone} onClick={() => setShowEditAccount(true)} />
+            <SettingRow label="Password" desc="Change your password" icon={Lock} onClick={() => setShowChangePassword(true)} />
             <SettingRow label="Account Type" desc="Personal or Creator account" icon={User} right={<span className="text-xs font-bold text-[#561C24]">Creator</span>} />
             <SettingRow label="Personal Information" desc="Birthday, gender, language" icon={Info} />
           </Section>
@@ -510,13 +812,13 @@ export default function SettingsPage() {
               label="Private Account"
               desc="Only approved followers can see your projects"
               icon={Lock}
-              right={<Toggle value={privacy.privateAccount} onChange={v => setPrivacy(p => ({ ...p, privateAccount: v }))} id="toggle-private" />}
+              right={<Toggle value={privacy.privateAccount} onChange={v => handlePrivacyChange('privateAccount', v)} id="toggle-private" />}
             />
             <SettingRow
               label="Activity Status"
               desc="Show when you're active"
               icon={Zap}
-              right={<Toggle value={privacy.activityStatus} onChange={v => setPrivacy(p => ({ ...p, activityStatus: v }))} id="toggle-activity" />}
+              right={<Toggle value={privacy.activityStatus} onChange={v => handlePrivacyChange('activityStatus', v)} id="toggle-activity" />}
             />
             <SettingRow label="Who Can Comment" desc="Everyone, followers, nobody" icon={MessageIcon} right={<span className="text-xs text-[#561C24]/50">Everyone</span>} />
             <SettingRow label="Who Can Message" desc="Control DM permissions" icon={MessageIcon} right={<span className="text-xs text-[#561C24]/50">Everyone</span>} />
@@ -588,11 +890,11 @@ export default function SettingsPage() {
               label="Two-Factor Authentication"
               desc="Add an extra layer of security"
               icon={Shield}
-              right={<Toggle value={security.twoFactor} onChange={v => setSecurity(s => ({ ...s, twoFactor: v }))} id="toggle-2fa" />}
+              right={<Toggle value={security.twoFactor} onChange={v => handleSecurityChange('twoFactor', v)} id="toggle-2fa" />}
             />
             <SettingRow label="Login Activity" desc="Recent sign-ins and devices" icon={Smartphone} />
             <SettingRow label="Saved Devices" desc="Manage trusted devices" icon={Smartphone} />
-            <SettingRow label="Change Password" desc="Update your password" icon={Lock} />
+            <SettingRow label="Change Password" desc="Update your password" icon={Lock} onClick={() => setShowChangePassword(true)} />
           </Section>
 
           {/* ─── APPEARANCE ─── */}
@@ -678,13 +980,29 @@ export default function SettingsPage() {
 
       <BottomNav />
 
-      {/* Logout modal */}
+      {/* Modals */}
       <AnimatePresence>
         {showLogout && (
           <LogoutModal
             onConfirm={handleLogout}
             onCancel={() => setShowLogout(false)}
           />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showEditAccount && (
+          <EditAccountModal
+            user={user}
+            onClose={() => setShowEditAccount(false)}
+            onSaved={handleAccountSaved}
+          />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showChangePassword && (
+          <ChangePasswordModal onClose={() => setShowChangePassword(false)} />
         )}
       </AnimatePresence>
     </motion.div>

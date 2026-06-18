@@ -109,6 +109,12 @@ export default function ConversationList({
               ))
             )}
           </div>
+        ) : loading ? (
+          /* Loading state */
+          <div className="flex flex-col items-center justify-center py-20 gap-3">
+            <div className="w-8 h-8 rounded-full border-2 border-[#561C24]/20 border-t-[#561C24] animate-spin" />
+            <p className="text-xs text-[#561C24]/40">Loading conversations...</p>
+          </div>
         ) : conversations.length === 0 ? (
           /* Conversations placeholder */
           <div className="flex flex-col items-center justify-center py-20 text-center gap-2">

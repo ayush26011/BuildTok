@@ -6,6 +6,7 @@ import { ThemeProvider } from './context/ThemeContext';
 import Navbar from './components/layout/Navbar';
 import CursorGlow from './components/ui/CursorGlow';
 import ScrollProgress from './components/ui/ScrollProgress';
+import ErrorBoundary from './components/ui/ErrorBoundary';
 import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
@@ -80,7 +81,9 @@ export default function App() {
     <ThemeProvider>
       <AuthProvider>
         <SocketProvider>
-          <AppRoutes />
+          <ErrorBoundary>
+            <AppRoutes />
+          </ErrorBoundary>
         </SocketProvider>
       </AuthProvider>
     </ThemeProvider>

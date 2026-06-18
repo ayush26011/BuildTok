@@ -8,11 +8,13 @@ import ConversationList from '../components/messages/ConversationList';
 import ChatWindow from '../components/messages/ChatWindow';
 import ErrorBoundary from '../components/ui/ErrorBoundary';
 import { useAuth } from '../context/AuthContext';
+import { useSocket } from '../context/SocketContext';
 import { pageVariants } from '../utils/animations';
 import API from '../services/api';
 
 export default function MessagesPage() {
   const { user: currentUser, loading: authLoading } = useAuth();
+  const { socket } = useSocket();
   const { conversationId: paramConversationId } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -46,6 +48,19 @@ export default function MessagesPage() {
     fetchConversations();
   }, [fetchConversations]);
 
+  // ── Socket-driven conversation list refresh ───────────────────────
+  useEffect(() => {
+    if (!socket) return;
+    const refresh = () => fetchConversations();
+    socket.on('receive_message', refresh);
+    socket.on('new_message_notification', refresh);
+    socket.on('message_seen', refresh);
+    return () => {
+      socket.off('receive_message', refresh);
+      socket.off('new_message_notification', refresh);
+      socket.off('message_seen', refresh);
+    };
+  }, [socket, fetchConversations]);
   // ── Activate conversation when URL has :conversationId ───────────
   useEffect(() => {
     if (!paramConversationId || !currentUser) return;
