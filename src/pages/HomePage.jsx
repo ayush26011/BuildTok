@@ -1,29 +1,55 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronUp, ChevronDown, Shuffle } from 'lucide-react';
-import { mockProjects } from '../data/mockData';
+import { projectService } from '../services/projectService';
+import SkeletonLoader from '../components/ui/SkeletonLoader';
 import ReelCard from '../components/feed/ReelCard';
 import Sidebar from '../components/layout/Sidebar';
 import BottomNav from '../components/layout/BottomNav';
 import { pageVariants } from '../utils/animations';
 
 export default function HomePage() {
+  const [projects, setProjects] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [activeIndex, setActiveIndex] = useState(0);
   const containerRef = useRef(null);
   const isScrollingRef = useRef(false);
 
+  // Load live feed from backend
+  useEffect(() => {
+    let active = true;
+    const fetchFeed = async () => {
+      try {
+        const response = await projectService.getFeed();
+        if (active && response.success) {
+          setProjects(response.data || []);
+        }
+      } catch (err) {
+        console.error('Error fetching feed:', err);
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
+    fetchFeed();
+    return () => {
+      active = false;
+    };
+  }, []);
+
   // Keyboard navigation
   useEffect(() => {
+    if (projects.length === 0) return;
     const onKey = (e) => {
       if (e.key === 'ArrowDown' || e.key === 's') goNext();
       if (e.key === 'ArrowUp' || e.key === 'w') goPrev();
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [activeIndex]);
+  }, [activeIndex, projects.length]);
 
   // Touch swipe
   useEffect(() => {
+    if (projects.length === 0) return;
     const el = containerRef.current;
     if (!el) return;
     let startY = 0;
@@ -40,10 +66,11 @@ export default function HomePage() {
       el.removeEventListener('touchstart', onTouchStart);
       el.removeEventListener('touchend', onTouchEnd);
     };
-  }, [activeIndex]);
+  }, [activeIndex, projects.length]);
 
   // Wheel scroll
   useEffect(() => {
+    if (projects.length === 0) return;
     const el = containerRef.current;
     if (!el) return;
     const onWheel = (e) => {
@@ -55,10 +82,37 @@ export default function HomePage() {
     };
     el.addEventListener('wheel', onWheel, { passive: false });
     return () => el.removeEventListener('wheel', onWheel);
-  }, [activeIndex]);
+  }, [activeIndex, projects.length]);
 
-  const goNext = () => setActiveIndex(i => Math.min(i + 1, mockProjects.length - 1));
+  const goNext = () => setActiveIndex(i => Math.min(i + 1, projects.length - 1));
   const goPrev = () => setActiveIndex(i => Math.max(i - 1, 0));
+
+  if (loading) {
+    return (
+      <div className="flex h-screen bg-black text-white overflow-hidden">
+        <Sidebar />
+        <div className="flex-1 lg:ml-60 relative flex items-center justify-center p-6">
+          <div className="w-full max-w-lg">
+            <SkeletonLoader type="card" count={1} />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (projects.length === 0) {
+    return (
+      <div className="flex h-screen bg-black text-white overflow-hidden">
+        <Sidebar />
+        <div className="flex-1 lg:ml-60 relative flex flex-col items-center justify-center p-6 gap-4 text-center">
+          <Shuffle className="text-[#6D2932] w-12 h-12 animate-pulse" />
+          <h3 className="text-xl font-bold text-cream">No projects found</h3>
+          <p className="text-white/60 text-sm max-w-xs">Be the first to showcase your innovation to the BuildTok community!</p>
+        </div>
+        <BottomNav />
+      </div>
+    );
+  }
 
   return (
     <motion.div
@@ -81,8 +135,8 @@ export default function HomePage() {
           className="h-full transition-transform duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]"
           style={{ transform: `translateY(-${activeIndex * 100}%)` }}
         >
-          {mockProjects.map((project, i) => (
-            <div key={project.id} className="h-screen w-full relative">
+          {projects.map((project, i) => (
+            <div key={project.id || project._id} className="h-screen w-full relative">
               <ReelCard project={project} isActive={i === activeIndex} />
             </div>
           ))}
@@ -104,10 +158,10 @@ export default function HomePage() {
           <motion.button
             className="w-10 h-10 rounded-full glass-dark flex items-center justify-center"
             onClick={goNext}
-            disabled={activeIndex === mockProjects.length - 1}
+            disabled={activeIndex === projects.length - 1}
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
-            animate={{ opacity: activeIndex === mockProjects.length - 1 ? 0.3 : 1 }}
+            animate={{ opacity: activeIndex === projects.length - 1 ? 0.3 : 1 }}
             id="reel-next-btn"
           >
             <ChevronDown size={18} className="text-white" />
@@ -116,7 +170,7 @@ export default function HomePage() {
 
         {/* Progress dots */}
         <div className="absolute left-4 top-1/2 -translate-y-1/2 z-20 hidden lg:flex flex-col gap-2">
-          {mockProjects.map((_, i) => (
+          {projects.map((_, i) => (
             <motion.button
               key={i}
               className="w-1.5 rounded-full bg-white/40 cursor-pointer"
@@ -141,7 +195,7 @@ export default function HomePage() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 8 }}
             >
-              {activeIndex + 1} / {mockProjects.length}
+              {activeIndex + 1} / {projects.length}
             </motion.div>
           </AnimatePresence>
         </div>

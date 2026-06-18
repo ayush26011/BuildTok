@@ -15,6 +15,7 @@ import UploadPage from './pages/UploadPage';
 import ProfilePage from './pages/ProfilePage';
 import ProjectDetailPage from './pages/ProjectDetailPage';
 import SettingsPage from './pages/SettingsPage';
+import FollowListPage from './pages/FollowListPage';
 
 // Navbar only on pages that need it (landing page kept at /landing)
 const NO_NAV_ROUTES = ['/login', '/register', '/feed', '/'];
@@ -49,6 +50,8 @@ function AppRoutes() {
           <Route path="/explore" element={<ExplorePage />} />
           <Route path="/upload" element={<UploadPage />} />
           <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/profile/followers" element={<FollowListPage type="followers" />} />
+          <Route path="/profile/following" element={<FollowListPage type="following" />} />
           <Route path="/project/:id" element={<ProjectDetailPage />} />
           <Route path="/settings" element={<SettingsPage />} />
 

@@ -1,9 +1,12 @@
 import { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Navigate } from 'react-router-dom';
 import { Upload, X, Plus, Link, GitBranch, FileVideo, Tag, CheckCircle, ArrowRight, ArrowLeft } from 'lucide-react';
 import Sidebar from '../components/layout/Sidebar';
 import BottomNav from '../components/layout/BottomNav';
 import { pageVariants, fadeUpVariants } from '../utils/animations';
+import { useAuth } from '../context/AuthContext';
+import { projectService } from '../services/projectService';
 
 const STEPS = ['Project Info', 'Tech Stack', 'Links & Media', 'Review'];
 
@@ -83,6 +86,11 @@ function DropZone({ onFile, file, uploading, progress }) {
 }
 
 export default function UploadPage() {
+  const { user: currentUser } = useAuth();
+  if (!currentUser) {
+    return <Navigate to="/login" replace />;
+  }
+
   const [step, setStep] = useState(0);
   const [form, setForm] = useState({
     title: '', description: '', tech: [], github: '', demo: '', category: 'Web Development', file: null,
@@ -91,6 +99,7 @@ export default function UploadPage() {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [techInput, setTechInput] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  const [publishing, setPublishing] = useState(false);
 
   const update = (field) => (val) => setForm(f => ({ ...f, [field]: val }));
 
@@ -114,7 +123,40 @@ export default function UploadPage() {
   };
 
   const handleSubmit = async () => {
-    setSubmitted(true);
+    if (publishing) return;
+    try {
+      setPublishing(true);
+      const formData = new FormData();
+      formData.append('title', form.title);
+      formData.append('description', form.description);
+      
+      let mappedCategory = 'Other';
+      if (form.category === 'AI / ML') mappedCategory = 'AI';
+      else if (form.category === 'Mobile Apps') mappedCategory = 'Mobile';
+      else mappedCategory = form.category;
+      formData.append('category', mappedCategory);
+      
+      formData.append('techStack', form.tech.join(','));
+      formData.append('tags', form.tech.join(','));
+      formData.append('githubLink', form.github);
+      formData.append('liveDemoLink', form.demo);
+      
+      if (form.file) {
+        formData.append('video', form.file);
+      }
+      
+      const res = await projectService.createProject(formData);
+      if (res.success) {
+        setSubmitted(true);
+      } else {
+        alert(res.message || 'Failed to publish project.');
+      }
+    } catch (err) {
+      console.error(err);
+      alert(err.message || 'An error occurred during publication.');
+    } finally {
+      setPublishing(false);
+    }
   };
 
   const canNext = () => {
@@ -407,12 +449,14 @@ export default function UploadPage() {
             <motion.button
               id="upload-next-btn"
               onClick={() => step < STEPS.length - 1 ? setStep(s => s + 1) : handleSubmit()}
-              disabled={!canNext()}
-              className={`flex-1 btn-primary flex items-center justify-center gap-2 ${!canNext() ? 'opacity-50' : ''}`}
-              whileHover={canNext() ? { scale: 1.02, y: -1 } : undefined}
+              disabled={!canNext() || publishing}
+              className={`flex-1 btn-primary flex items-center justify-center gap-2 ${(!canNext() || publishing) ? 'opacity-50' : ''}`}
+              whileHover={(canNext() && !publishing) ? { scale: 1.02, y: -1 } : undefined}
               whileTap={{ scale: 0.98 }}
             >
-              {step < STEPS.length - 1 ? (
+              {publishing ? (
+                <>Publishing...</>
+              ) : step < STEPS.length - 1 ? (
                 <>Continue <ArrowRight size={16} /></>
               ) : (
                 <>🚀 Publish Project</>

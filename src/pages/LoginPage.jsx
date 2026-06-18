@@ -22,9 +22,9 @@ export default function LoginPage() {
     setError('');
     try {
       await login(email, password);
-      navigate('/feed');
-    } catch {
-      setError('Invalid credentials. Try again.');
+      navigate('/');
+    } catch (err) {
+      setError(err.message || 'Invalid credentials. Try again.');
     } finally {
       setLoading(false);
     }
@@ -124,7 +124,18 @@ export default function LoginPage() {
               id="github-login-btn"
               className="w-full btn-ghost flex items-center justify-center gap-3 !py-3.5"
               whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.98 }}
-              onClick={() => { login('demo@buildtok.dev', 'demo'); navigate('/feed'); }}
+              onClick={async () => {
+                try {
+                  setLoading(true);
+                  setError('');
+                  await login('aryan@buildtok.dev', 'password123');
+                  navigate('/');
+                } catch (err) {
+                  setError(err.message);
+                } finally {
+                  setLoading(false);
+                }
+              }}
             >
               <GitBranch size={18} />
               Continue with GitHub
